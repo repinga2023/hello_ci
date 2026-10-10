@@ -1,0 +1,38 @@
+image: python:3.13
+
+stages:
+  - test
+  - build
+
+.default_script: &default_script
+  before_script:
+    - pip install flake8 pytest setuptools wheel build
+
+lint:
+  stage: test
+  <<: *default_script
+  script:
+    - flake8 hello tests
+
+tests:
+  stage: test
+  <<: *default_script
+  script:
+    - pytest --junitxml=report.xml
+  artifacts:
+    when: always
+    reports:
+      junit: report.xml
+
+build_app:
+  stage: build
+  needs: ["lint", "tests"]
+  <<: *default_script
+  script:
+    python -m build --sdist --wheel
+  artifacts:
+    when: always
+    paths:
+      - dist/
+
+
